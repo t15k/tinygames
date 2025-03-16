@@ -58,7 +58,7 @@ it looses one hitpoint. If a ship has zero hitpoints, it is removed
 from the screen. The player can only have on shot active
 at any point in time.
 
-For the player graphics use the image `Player_spaceship.png`.
+For the player graphics use the image `Player_Spaceship.png`.
 
 ## Scoring
 
