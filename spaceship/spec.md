@@ -13,6 +13,21 @@ Player score is at the top left.
 
 Level is displayed at the top right.
 
+All image files can be found in the folder `images`.
+
+## Highscore list
+
+When the game is not playing, show a highscore list on top
+of the spaceship area.
+The highscore list have a max of 10 entries, going highest to lowest (top down).
+When a player is game the must be asked for the initials (max three charaters) if
+the qualify for the list.
+
+The list must be persisted between browser reloads. Also we should reset the list
+if there is a major version update to the game.
+
+The current version is 1.
+
 ## Movement
 
 The player spacehip can only move up and down. The player uses arrow up and down to
@@ -24,16 +39,26 @@ Enimies enter from the right and move in a straight line towards the side of the
 
 There three kinds of enemy spaceships.
 
-- Frigates, which are red and have one hitpoint.
-- Destroyers, which are orange and have two hitpoints.
-- Corvette, which are green and have one hit point. Corvettes can fire back
+- Frigates, have one hitpoint. Use the image `Frigate.png` for graphics.
+- Destroyers. Have two hitpoints.
+  Use the image `Destroyer.png` for graphics.
+- Corvette. Have one hit point. Corvettes can fire back
   et the player. Can only have one short active at any given time. If the
   player is hit, the player loose one life.
+  Initially on one covertte on screen is allowed. For every five levels
+  one extra corvette is allowed on screen.
+  Corvettes are draw as triangles with the point pointed at the players
+  side. Short are fired from the point.
+  Use the image `Corvette.png` for graphics.
+
+## The player
 
 The players spaceship can shoot. If an enemy spaceship is hit by a shot,
 it looses one hitpoint. If a ship has zero hitpoints, it is removed
 from the screen. The player can only have on shot active
 at any point in time.
+
+For the player graphics use the image `Player_spaceship.png`.
 
 ## Scoring
 

@@ -3,16 +3,26 @@ const gameArea = document.getElementById('game-area');
 const player = document.getElementById('player');
 const livesDisplay = document.querySelector('#lives span');
 const scoreDisplay = document.querySelector('#score span');
+const highScoreDisplay = document.querySelector('#high-score span');
 const levelDisplay = document.querySelector('#level span');
 const gameOverMessage = document.getElementById('game-over');
 const restartButton = document.getElementById('restart-button');
+const highscoreContainer = document.getElementById('highscore-container');
+const highscoreList = document.getElementById('highscore-list');
+const initialInput = document.getElementById('initial-input');
+const finalScoreDisplay = document.querySelector('#final-score span');
+const initialsInput = document.getElementById('initials-input');
+const submitScoreButton = document.getElementById('submit-score');
+
+// Initialize highscore manager
+const highscoreManager = new HighscoreManager();
 
 // Game settings
 const gameHeight = gameArea.clientHeight;
 const gameWidth = gameArea.clientWidth;
-const playerEdgeSize = Math.floor(gameHeight * 0.2); // 20% of screen height as triangle edge size
+const playerEdgeSize = Math.floor(gameHeight * 0.2); // 20% of screen height
 const playerHeight = playerEdgeSize;
-const playerWidth = Math.floor(playerEdgeSize * 0.866); // height of equilateral triangle (sqrt(3)/2 * edge)
+const playerWidth = Math.floor(playerEdgeSize * 1.5); // Assuming 3:2 aspect ratio for ship image
 const enemyHeight = Math.floor(gameHeight * 0.1); // 10% of screen height
 const enemyWidth = Math.floor(enemyHeight * 1.5); // aspect ratio 3:2
 const playerSpeed = 8;
@@ -26,8 +36,10 @@ const initialLevel = 1;
 let playerPosition = gameHeight / 2 - playerHeight / 2;
 let lives = 3;
 let score = 0;
+let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
 let currentLevel = initialLevel;
 let gameIsOver = false;
+let gameIsPlaying = false;
 let keys = {};
 let enemies = [];
 let shot = null;
@@ -38,10 +50,15 @@ let gameStartTime;
 
 // Initialize the game
 function init() {
-    // Set player size (triangle)
-    player.style.borderTopWidth = (playerEdgeSize / 2) + 'px';
-    player.style.borderBottomWidth = (playerEdgeSize / 2) + 'px';
-    player.style.borderLeftWidth = playerWidth + 'px';
+    // Force hide all non-game UI elements
+    highscoreContainer.classList.add('hidden');
+    initialInput.classList.add('hidden');
+    gameOverMessage.classList.add('hidden');
+    restartButton.classList.add('hidden');
+    
+    // Set player size
+    player.width = playerWidth;
+    player.height = playerHeight;
     player.style.top = playerPosition + 'px';
     
     // Reset game state
@@ -50,8 +67,10 @@ function init() {
     currentLevel = initialLevel;
     livesDisplay.textContent = lives;
     scoreDisplay.textContent = score;
+    highScoreDisplay.textContent = highScore;
     levelDisplay.textContent = currentLevel;
     gameIsOver = false;
+    gameIsPlaying = true;
     enemies = [];
     shot = null;
     enemyShots = [];
@@ -72,30 +91,17 @@ function init() {
     
     // Start game loop
     requestAnimationFrame(gameLoop);
-    
-    // Force spawn a corvette for testing
-    setTimeout(() => {
-        if (!gameIsOver) {
-            console.log("Forcing corvette spawn for testing");
-            const enemy = document.createElement('div');
-            enemy.className = 'enemy corvette';
-            enemy.style.width = enemyWidth + 'px';
-            enemy.style.height = enemyHeight + 'px';
-            const enemyPosition = Math.random() * (gameHeight - enemyHeight);
-            enemy.style.top = enemyPosition + 'px';
-            enemy.style.left = gameWidth + 'px';
-            gameArea.appendChild(enemy);
-            enemies.push({ 
-                element: enemy, 
-                position: { x: gameWidth, y: enemyPosition },
-                type: 'corvette',
-                hitPoints: 1,
-                points: 1,
-                lastShotTime: 0,
-                canShoot: true
-            });
-        }
-    }, 2000); // 2 seconds after game start
+}
+
+// Count the current number of corvettes on screen
+function countCorvettesOnScreen() {
+    return enemies.filter(enemy => enemy.type === 'corvette').length;
+}
+
+// Calculate maximum allowed corvettes based on current level
+function getMaxAllowedCorvettes() {
+    // Start with 1, add another corvette for every 5 levels
+    return Math.floor(1 + Math.floor((currentLevel - 1) / 5));
 }
 
 // Increase level
@@ -103,6 +109,7 @@ function increaseLevel() {
     currentLevel++;
     levelDisplay.textContent = currentLevel;
     console.log(`Level increased to ${currentLevel}!`);
+    console.log(`Max corvettes allowed: ${getMaxAllowedCorvettes()}`);
     
     // Spawn enemies to match the new minimum required
     checkMinimumEnemies();
@@ -127,6 +134,14 @@ function checkMinimumEnemies() {
 // Game loop
 function gameLoop() {
     if (!gameIsOver) {
+        // Ensure highscore list stays hidden during gameplay
+        if (!highscoreContainer.classList.contains('hidden')) {
+            highscoreContainer.classList.add('hidden');
+        }
+        if (!initialInput.classList.contains('hidden')) {
+            initialInput.classList.add('hidden');
+        }
+        
         updatePlayer();
         updateEnemies();
         updateShot();
@@ -162,35 +177,64 @@ function spawnEnemy(forceSpawn = false) {
     // Don't spawn if we already have max enemies, unless forced
     if (!forceSpawn && enemies.length >= maxEnemies) return;
     
-    const enemy = document.createElement('div');
+    // Check corvette limit and adjust random selection if needed
+    const currentCorvettes = countCorvettesOnScreen();
+    const maxCorvettes = getMaxAllowedCorvettes();
+    
+    // Create enemy image element
+    const enemy = document.createElement('img');
     enemy.className = 'enemy';
     
     // Randomly decide enemy type
-    const rand = Math.random();
-    let type, hitPoints, points;
+    let rand = Math.random();
+    let type, hitPoints, points, imageSrc;
+    
+    // If we're at or over the corvette limit, don't create more corvettes
+    if (currentCorvettes >= maxCorvettes && rand >= 0.3 && rand < 0.6) {
+        // Redistribute probability between destroyer and frigate
+        rand = rand < 0.45 ? 0.2 : 0.7; // 50/50 chance between destroyer and frigate
+    }
     
     if (rand < 0.3) { // 30% chance for destroyer
         enemy.classList.add('destroyer');
         type = 'destroyer';
         hitPoints = 2;
         points = 2;
+        imageSrc = 'images/Destroyer.png'; // Note: spec says 'Destroer.png' but that's likely a typo
     } else if (rand < 0.6) { // 30% chance for corvette
-        enemy.classList.add('corvette');
-        type = 'corvette';
-        hitPoints = 1;
-        points = 1;
+        // Only create corvette if we haven't reached the limit
+        if (currentCorvettes < maxCorvettes) {
+            enemy.classList.add('corvette');
+            type = 'corvette';
+            hitPoints = 1;
+            points = 1;
+            imageSrc = 'images/Corvette.png';
+        } else {
+            // Default to frigate if corvette limit reached
+            enemy.classList.add('frigate');
+            type = 'frigate';
+            hitPoints = 1;
+            points = 1;
+            imageSrc = 'images/Frigate.png';
+        }
     } else { // 40% chance for frigate
         enemy.classList.add('frigate');
         type = 'frigate';
         hitPoints = 1;
         points = 1;
+        imageSrc = 'images/Frigate.png';
     }
     
-    // Debug log to confirm enemy types
-    console.log(`Spawned enemy type: ${type}`);
+    // Set enemy image source
+    enemy.src = imageSrc;
+    enemy.alt = type;
     
-    enemy.style.width = enemyWidth + 'px';
-    enemy.style.height = enemyHeight + 'px';
+    // Set enemy dimensions
+    enemy.width = enemyWidth;
+    enemy.height = enemyHeight;
+    
+    // Debug log to confirm enemy types
+    console.log(`Spawned enemy type: ${type} (corvettes: ${currentCorvettes}/${maxCorvettes})`);
     
     // Position enemy at random height on the right edge
     const enemyPosition = Math.random() * (gameHeight - enemyHeight);
@@ -253,9 +297,9 @@ function fireShot() {
     const shotElement = document.createElement('div');
     shotElement.className = 'shot';
     
-    // Position shot to come from the tip of the triangle
+    // Position shot to come from the tip of the player ship
     const shotY = playerPosition + playerHeight / 2 - 2.5; // Center vertically
-    const shotX = 20 + playerWidth; // Left position + triangle width
+    const shotX = 20 + playerWidth; // Left position + player width
     
     shotElement.style.top = shotY + 'px';
     shotElement.style.left = shotX + 'px';
@@ -274,7 +318,7 @@ function fireEnemyShot(enemy) {
     
     // Position shot to come from the enemy
     const shotY = enemy.position.y + enemyHeight / 2 - 2.5;
-    const shotX = enemy.position.x; // From left side of enemy
+    const shotX = enemy.position.x; // Shot from front of ship
     
     shotElement.style.top = shotY + 'px';
     shotElement.style.left = shotX + 'px';
@@ -378,12 +422,6 @@ function checkCollisions() {
     // Check for enemies hitting player
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        const playerObj = {
-            position: { x: 20, y: playerPosition },
-            width: playerWidth,
-            height: playerHeight,
-            isTriangle: true
-        };
         
         if (isColliding(playerObj, enemy)) {
             // Remove enemy and reduce lives
@@ -398,6 +436,13 @@ function checkCollisions() {
 function updateScore(points) {
     score += points;
     scoreDisplay.textContent = score;
+    
+    // Check and update high score if needed
+    if (score > highScore) {
+        highScore = score;
+        highScoreDisplay.textContent = highScore;
+        localStorage.setItem('highScore', highScore);
+    }
 }
 
 // Collision detection helper
@@ -433,9 +478,6 @@ function isColliding(obj1, obj2) {
         obj2Height = obj2.height;
     }
     
-    // For simplicity, we'll use rectangle collision even for the triangle player
-    // In a more advanced game, we could implement more accurate triangle collision
-    
     return (
         obj1.position.x < obj2.position.x + obj2Width &&
         obj1.position.x + obj1Width > obj2.position.x &&
@@ -457,19 +499,130 @@ function decreaseLives() {
 // Game over function
 function gameOver() {
     gameIsOver = true;
+    gameIsPlaying = false;
     clearInterval(enemySpawnInterval);
     clearInterval(levelInterval);
+    
+    // Final check for high score
+    if (score > highScore) {
+        highScore = score;
+        highScoreDisplay.textContent = highScore;
+        localStorage.setItem('highScore', highScore);
+    }
+    
     gameOverMessage.classList.remove('hidden');
     restartButton.classList.remove('hidden');
+    
+    // Check if score qualifies for highscore list
+    if (highscoreManager.qualifiesForHighscore(score)) {
+        // Show input for player initials
+        finalScoreDisplay.textContent = score;
+        initialInput.classList.remove('hidden');
+        initialsInput.value = '';
+        initialsInput.focus();
+    } else {
+        // If no highscore, show the highscore list after a delay
+        setTimeout(showHighscores, 2000);
+    }
+}
+
+// Show highscores
+function showHighscores() {
+    // Don't show highscores if game is currently playing
+    if (gameIsPlaying || !gameIsOver) {
+        console.log("Attempted to show highscores during gameplay - prevented");
+        return;
+    }
+    
+    // Clear previous entries
+    highscoreList.innerHTML = '';
+    
+    // Get highscores and create entries
+    const scores = highscoreManager.getScores();
+    scores.forEach((entry, index) => {
+        const entryElement = document.createElement('div');
+        entryElement.className = 'highscore-entry';
+        
+        const rankElement = document.createElement('div');
+        rankElement.className = 'rank';
+        rankElement.textContent = `${index + 1}.`;
+        
+        const initialsElement = document.createElement('div');
+        initialsElement.className = 'initials';
+        initialsElement.textContent = entry.initials;
+        
+        const scoreElement = document.createElement('div');
+        scoreElement.className = 'score';
+        scoreElement.textContent = entry.score;
+        
+        entryElement.appendChild(rankElement);
+        entryElement.appendChild(initialsElement);
+        entryElement.appendChild(scoreElement);
+        
+        highscoreList.appendChild(entryElement);
+    });
+    
+    // Show highscore container
+    highscoreContainer.classList.remove('hidden');
+}
+
+// Submit score
+function submitScore() {
+    const initials = initialsInput.value.trim();
+    if (initials) {
+        // Add score to highscore list
+        highscoreManager.addScore(initials, score);
+        
+        // Hide input form
+        initialInput.classList.add('hidden');
+        
+        // Show highscore list
+        showHighscores();
+    }
 }
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
+    // If game is playing, only handle game controls
+    if (gameIsPlaying) {
+        keys[e.key] = true;
+        
+        // Space bar to shoot only when playing
+        if (e.key === ' ') {
+            fireShot();
+        }
+        
+        // Ensure highscore elements are hidden during gameplay
+        highscoreContainer.classList.add('hidden');
+        initialInput.classList.add('hidden');
+        
+        return;
+    }
+    
+    // When not playing, handle menu controls
     keys[e.key] = true;
     
-    // Space bar to shoot
+    // Space bar functions when not playing
     if (e.key === ' ') {
-        fireShot();
+        if (!initialInput.classList.contains('hidden')) {
+            // If showing highscore input, space should submit
+            submitScore();
+        } else {
+            // Start game (whether showing highscores or not)
+            highscoreContainer.classList.add('hidden');
+            init();
+        }
+    }
+    
+    // Enter key to submit initials
+    if (e.key === 'Enter' && !initialInput.classList.contains('hidden')) {
+        submitScore();
+    }
+    
+    // Escape key to skip highscore input
+    if (e.key === 'Escape' && !initialInput.classList.contains('hidden')) {
+        initialInput.classList.add('hidden');
+        showHighscores();
     }
 });
 
@@ -477,7 +630,30 @@ document.addEventListener('keyup', (e) => {
     keys[e.key] = false;
 });
 
-restartButton.addEventListener('click', init);
+// Submit score button event
+submitScoreButton.addEventListener('click', submitScore);
 
-// Start the game when the page loads
-window.addEventListener('load', init);
+// Restart button event to override
+restartButton.addEventListener('click', () => {
+    // If showing highscore input, hide it
+    initialInput.classList.add('hidden');
+    // If showing highscores, hide them
+    highscoreContainer.classList.add('hidden');
+    // Start the game
+    init();
+});
+
+// Load high score when page loads
+window.addEventListener('DOMContentLoaded', () => {
+    highScoreDisplay.textContent = highScore;
+    gameIsPlaying = false; // Ensure we're not in playing state initially
+    showHighscores(); // Show highscores initially
+});
+
+// Start the game when the page loads or show highscores
+window.addEventListener('load', () => {
+    // Initially show highscores instead of starting the game
+    if (!gameIsPlaying) {
+        showHighscores();
+    }
+});

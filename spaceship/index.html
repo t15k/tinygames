@@ -10,9 +10,23 @@
     <div id="game-container">
         <div id="game-area">
             <div id="score">Score: <span>0</span></div>
+            <div id="high-score">High Score: <span>0</span></div>
             <div id="level">Level: <span>1</span></div>
-            <div id="player"></div>
+            <img id="player" src="images/Player_spaceship.png" alt="Player spaceship">
             <!-- Enemies and shots will be created dynamically -->
+            
+            <div id="highscore-container" class="hidden">
+                <h2>HIGH SCORES</h2>
+                <div id="highscore-list"></div>
+            </div>
+            
+            <div id="initial-input" class="hidden">
+                <h3>NEW HIGH SCORE!</h3>
+                <p id="final-score">Your score: <span>0</span></p>
+                <p>Enter your initials (3 letters max):</p>
+                <input type="text" id="initials-input" maxlength="3" autocomplete="off">
+                <button id="submit-score">Submit</button>
+            </div>
         </div>
         <div id="game-info">
             <div id="lives">Lives: <span>3</span></div>
@@ -20,6 +34,7 @@
             <button id="restart-button" class="hidden">Restart</button>
         </div>
     </div>
+    <script src="js/highscore.js"></script>
     <script src="code.js"></script>
 </body>
 </html>
