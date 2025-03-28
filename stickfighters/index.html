@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stick Fighters</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Emergency styles to ensure popup visibility */
+        .target-selection {
+            display: none;
+            position: fixed !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 2000 !important;
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border: 2px solid #ffcc00 !important;
+            width: 300px !important;
+            padding: 20px !important;
+            border-radius: 5px !important;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.7) !important;
+        }
+        
+        .target-selection.active {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Add overlay for target selection background -->
+    <div id="overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:900;"></div>
+    
+    <div class="game-container">
+        <h1>Stick Fighters</h1>
+        <div class="game-status" id="game-status">
+            <p id="status-message">Battle starts! Select your action.</p>
+        </div>
+        <div class="battlefield">
+            <div class="team player-team" id="player-team">
+                <h2>Player Team</h2>
+                <div class="combatants" id="player-combatants">
+                    <!-- Player combatants will be generated here -->
+                </div>
+            </div>
+            
+            <div class="team computer-team" id="computer-team">
+                <h2>Computer Team</h2>
+                <div class="combatants" id="computer-combatants">
+                    <!-- Computer combatants will be generated here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-menu" id="action-menu">
+            <div class="selected" data-action="attack">Attack</div>
+            <div data-action="recover">Recover</div>
+        </div>
+    </div>
+    
+    <!-- Target selection positioned outside the game container -->
+    <div class="target-selection" id="target-selection">
+        <h3>Select Target to Attack</h3>
+        <div class="targets" id="targets">
+            <!-- Targets will be generated here -->
+        </div>
+        <button id="cancel-target">Cancel Attack</button>
+    </div>
+    
+    <!-- Add debug output to help troubleshoot -->
+    <div id="debug-output" style="display: block; background: #333; color: white; padding: 10px; margin: 20px auto; max-width: 1000px; font-family: monospace; max-height: 200px; overflow-y: auto;"></div>
+    
+    <script src="code.js"></script>
+    <script src="popup-fix.js"></script>
+    <script src="direct-popup.js"></script>
+</body>
+</html>
