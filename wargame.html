@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Game</title>
+    <link rel="stylesheet" href="wargame.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>War Game</h1>
+        
+        <div class="game-area">
+            <div class="dice-area">
+                <h2>Dice Rolls</h2>
+                <div id="dice-container">
+                    <div class="dice-box">
+                        <div id="attacker-dice" class="dice">
+                            <div class="dice-face">
+                                <div class="pip"></div>
+                            </div>
+                        </div>
+                        <div class="dice-label">Attacker</div>
+                    </div>
+                    <div class="dice-box">
+                        <div id="defender-dice" class="dice">
+                            <div class="dice-face">
+                                <div class="pip"></div>
+                            </div>
+                        </div>
+                        <div class="dice-label">Defender</div>
+                    </div>
+                </div>
+                <div id="dice-result">
+                    <p>Attacker: <span id="attacker-roll">-</span></p>
+                    <p>Defender: <span id="defender-roll">-</span></p>
+                </div>
+                <div id="game-status">
+                    <p>Current Player: <span id="current-player">Blue</span></p>
+                    <p>Status: <span id="status-message">Select a unit to move</span></p>
+                </div>
+                <div class="terrain-legend">
+                    <h3>Terrain Legend</h3>
+                    <div class="legend-item">
+                        <div class="legend-color terrain-field"></div>
+                        <span>Field - Open terrain</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color terrain-woods"></div>
+                        <span>Woods - Tanks stop, Infantry +1 defense</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color terrain-mountain"></div>
+                        <span>Mountains - Tanks can't enter</span>
+                    </div>
+                </div>
+                <button id="reset-game">Reset Game</button>
+            </div>
+            
+            <div class="board" id="game-board">
+                <!-- Game board will be generated via JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="wargame.js"></script>
+</body>
+</html>
