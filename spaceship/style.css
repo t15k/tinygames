@@ -48,6 +48,18 @@ body {
     /* No specific styles needed, using images */
 }
 
+.enemy.boss {
+    border: 5px solid yellow !important; /* Much more visible yellow border */
+    box-shadow: 0 0 15px 8px rgba(255, 255, 0, 0.7) !important; /* Enhanced glow effect */
+    z-index: 100 !important; /* Ensure boss appears above everything else */
+    animation: pulse 1s infinite alternate; /* Add pulsing effect */
+}
+
+@keyframes pulse {
+    from { box-shadow: 0 0 15px 8px rgba(255, 255, 0, 0.7); }
+    to { box-shadow: 0 0 20px 12px rgba(255, 255, 0, 0.9); }
+}
+
 .shot {
     position: absolute;
     background-color: yellow;
@@ -60,6 +72,12 @@ body {
     background-color: red;
     width: 10px;
     height: 5px;
+}
+
+.enemy-shot.boss-shot {
+    background-color: purple; /* Differentiate boss shots */
+    width: 15px;
+    height: 8px;
 }
 
 #game-info {
