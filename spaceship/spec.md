@@ -68,15 +68,6 @@ The player accumaltes points by hitting enemy spaceships.
 - Destroyer: 2 points
 - Corvette: 1 point
 
-## Visuals
-
-The players spaceship is to be drawn as a blue triange, with
-the a point poinint at the enemry. Shot are fired from the tip of 
-the point . Make the trianlge edge size 20 pct of the screen height.
-
-The enemy spaceships are red rectangles where their length 10 pct of
-the screen height.
-
 ## Difficulty and levels
 
 The player start at level one. The number of enemy spaceships allowed on
@@ -86,6 +77,18 @@ enemy ships in parrallel if needed, to reach that number.
 
 As time passes the level goes up. The level is incremented by one
 every 30 seconds.
+
+## Boss figths
+
+At the end of each level there is a final space ship, which is the
+boss fight. Boss ships are not like other ships. They do not exit
+the screen on the left side, but will maneouver around the screen
+trying to hit the player with its shots.
+
+- A boss can have to active shot at any given time.
+- A boss has five hit points.
+- A boss is displayed as a Destroyer
+
 
 ## End of game
 
